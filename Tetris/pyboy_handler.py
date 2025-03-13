@@ -35,7 +35,7 @@ class PyBoyHandler:
             if end_game:
                 break
             
-        self.player.save_actions(self.final_reward)
+        #self.player.save_actions(self.final_reward)
             
         return self.end_game()
         

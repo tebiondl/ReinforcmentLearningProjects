@@ -26,18 +26,18 @@ class Player:
         # Reward for score
         if state["score"] > self.last_score:
             print("Score increased")
-            final_reward =+ self.rewards["score"]
+            final_reward += self.rewards["score"]
             self.last_score = state["score"]
         
         # Reward for level
         if state["level"] > self.last_level:
             print("Level increased")
-            final_reward =+ self.rewards["level"]
+            final_reward += self.rewards["level"]
             self.last_level = state["level"]
         
         # Reward for new piece
         if state["piece_change"] == 128:
-            final_reward =+ self.rewards["new_piece"]
+            final_reward += self.rewards["new_piece"]
         
         return final_reward
             
