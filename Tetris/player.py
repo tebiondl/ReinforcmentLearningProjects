@@ -17,18 +17,23 @@ class Player:
         self.recent_actions = [random.randint(0, 8) for _ in range(self.max_recent_actions)]
         self.recent_screens = np.zeros((36, 40, 3), dtype=np.uint8)
         self.all_actions = []
+        self.last_score = 0
+        self.last_level = 0
     
-    def reward_function(self, action, state, next_state):
+    def reward_function(self, state):
         final_reward = 0
         
         # Reward for score
-        if next_state["score"] > state["score"]:
+        if state["score"] > self.last_score:
             print("Score increased")
             final_reward =+ self.rewards["score"]
+            self.last_score = state["score"]
         
         # Reward for level
-        if next_state["level"] > state["level"]:
+        if state["level"] > self.last_level:
+            print("Level increased")
             final_reward =+ self.rewards["level"]
+            self.last_level = state["level"]
         
         # Reward for new piece
         if state["piece_change"] == 128:
@@ -38,14 +43,13 @@ class Player:
             
     def step(self):
         
-        current_state = self.get_state()
-        action = self.perform_action(current_state)
-            
-        next_state = self.get_state()
-        reward = self.reward_function(action, current_state, next_state)
+        self.perform_action()
+        state = self.get_state()
+        reward = self.reward_function(state)
         
         # Check if game is over
         if self.pyboy.memory[GAME_STATE] != 0:
+            reward += self.rewards["game_over"]
             return True, reward
         
         return False, reward
@@ -53,18 +57,17 @@ class Player:
     def get_state(self):
         return {"score": self.pyboy.memory[SCORE], "level": self.pyboy.memory[LEVEL], "piece_change": self.pyboy.memory[PIECE_CHANGE]}
     
-    def perform_action(self, current_state):
-        action = self.get_action(current_state)
+    def perform_action(self):
+        action = self.get_action()
 
         if action != '':
             self.pyboy.button(action)
         self.pyboy.tick(self.wait_for_action)
-        return action
     
-    def get_action(self, current_state):
+    def get_action(self):
         
         # Add observation to input
-        observation = self.get_observation(current_state)
+        observation = self.get_observation()
         
         result = self.net.activate(observation)
         
@@ -77,7 +80,7 @@ class Player:
             
         return self.actions[action_index]
     
-    def get_observation(self, current_state):
+    def get_observation(self):
         
         screen = self.render()
         self.update_recent_screens(screen)
