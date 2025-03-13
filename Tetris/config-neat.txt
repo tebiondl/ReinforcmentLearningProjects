@@ -1,14 +1,14 @@
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 100
-pop_size              = 20
+fitness_threshold     = 1000
+pop_size              = 30
 reset_on_extinction   = False
 
 [DefaultGenome]
 # node activation options
 activation_default      = relu
 activation_mutate_rate  = 0.1
-activation_options      = relu
+activation_options      = relu sigmoid tanh
 
 # node aggregation options
 aggregation_default     = sum
@@ -37,16 +37,16 @@ enabled_default         = True
 enabled_mutate_rate     = 0.01
 
 feed_forward            = True
-initial_connection      = full
+initial_connection      = partial_direct 0.3
 
 # node add/remove rates
 node_add_prob           = 0.2
 node_delete_prob        = 0.1
 
 # network parameters
-num_hidden              = 0
-num_inputs              = 17290
-num_outputs             = 9
+num_hidden              = 4
+num_inputs              = 4327
+num_outputs             = 7
 
 # node response options
 response_init_mean      = 1.0

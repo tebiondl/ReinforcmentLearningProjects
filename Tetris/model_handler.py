@@ -1,10 +1,12 @@
 from pyboy_handler import PyBoyHandler
 from multiprocessing import Process, Queue
 import neat
+from pyboy import PyBoy
+
 
 class ModelHandler:
     
-    def __init__(self, game_path="ROM/Tetris.gb", state_path="ROM/states/has_pokedex.state", config_file="config-neat.txt", generations=20):
+    def __init__(self, game_path="ROM/Tetris.gb", state_path="ROM/states/game_start.state", config_file="config-neat.txt", generations=20, test=False):
         self.list_of_pb = []
         self.generations = generations
         self.population_size = 3
@@ -12,6 +14,7 @@ class ModelHandler:
         self.state_path = state_path
         self.config_file = config_file
         self.current_generation = 0
+        self.test = test
 
     def create_handler(self, net, genome, queue):
         handler = PyBoyHandler(self.game_path, self.state_path, net, genome)
@@ -43,20 +46,33 @@ class ModelHandler:
                     break
 
     def run(self):
-        config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         self.config_file)
+        if not self.test:
+            config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                            neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                            self.config_file)
 
-        # Create the population, which is the top-level object for a NEAT run.
-        p = neat.Population(config)
+            # Create the population, which is the top-level object for a NEAT run.
+            p = neat.Population(config)
 
-        # Add a stdout reporter to show progress in the terminal.
-        p.add_reporter(neat.StdOutReporter(True))
-        stats = neat.StatisticsReporter()
-        p.add_reporter(stats)
-        p.add_reporter(neat.Checkpointer(5))
+            # Add a stdout reporter to show progress in the terminal.
+            p.add_reporter(neat.StdOutReporter(True))
+            stats = neat.StatisticsReporter()
+            p.add_reporter(stats)
+            p.add_reporter(neat.Checkpointer(5))
 
-        winner = p.run(self.eval_genomes, self.generations)
+            winner = p.run(self.eval_genomes, self.generations)
 
-        # show final stats
-        print('\nBest genome:\n{!s}'.format(winner))
+            # show final stats
+            print('\nBest genome:\n{!s}'.format(winner))
+        else:
+            self.test_run()
+
+    def test_run(self):
+        self.pyboy = PyBoy(self.game_path, sound_volume=0)
+        self.pyboy.set_emulation_speed(5)
+        
+        with open(self.state_path, "rb") as f:
+            self.pyboy.load_state(f)
+        
+        while self.pyboy.tick():
+            print(self.pyboy.memory[0xFFA0])
