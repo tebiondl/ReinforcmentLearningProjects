@@ -6,7 +6,7 @@ from pyboy import PyBoy
 
 class ModelHandler:
     
-    def __init__(self, game_path="ROM/Tetris.gb", state_path="ROM/states/game_start.state", config_file="config-neat.txt", generations=20, test=False):
+    def __init__(self, game_path="ROM/Tetris.gb", state_path="ROM/states/game_start.state", config_file="config-neat.txt", generations=20, test=False, checkpoint=None):
         self.list_of_pb = []
         self.generations = generations
         self.population_size = 3
@@ -15,6 +15,7 @@ class ModelHandler:
         self.config_file = config_file
         self.current_generation = 0
         self.test = test
+        self.checkpoint = checkpoint
 
     def create_handler(self, net, genome, queue):
         handler = PyBoyHandler(self.game_path, self.state_path, net, genome)
@@ -52,13 +53,18 @@ class ModelHandler:
                             self.config_file)
 
             # Create the population, which is the top-level object for a NEAT run.
-            p = neat.Population(config)
+            if self.checkpoint is not None:
+                print(f"Resuming from checkpoint: {self.checkpoint}")
+                p = neat.Checkpointer.restore_checkpoint(self.checkpoint)
+            else:
+                p = neat.Population(config)
 
             # Add a stdout reporter to show progress in the terminal.
             p.add_reporter(neat.StdOutReporter(True))
             stats = neat.StatisticsReporter()
             p.add_reporter(stats)
-            p.add_reporter(neat.Checkpointer(5))
+            # Save checkpoint every 5 generations, but keep only the last 5 checkpoint files
+            p.add_reporter(neat.Checkpointer(5, filename_prefix='neat-checkpoint-', max_generations_back=5))
 
             winner = p.run(self.eval_genomes, self.generations)
 
