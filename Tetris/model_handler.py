@@ -55,7 +55,7 @@ class ModelHandler:
             # Create the population, which is the top-level object for a NEAT run.
             if self.checkpoint is not None:
                 print(f"Resuming from checkpoint: {self.checkpoint}")
-                p = neat.Checkpointer.restore_checkpoint(self.checkpoint)
+                p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-' + str(self.checkpoint))
             else:
                 p = neat.Population(config)
 
@@ -63,8 +63,8 @@ class ModelHandler:
             p.add_reporter(neat.StdOutReporter(True))
             stats = neat.StatisticsReporter()
             p.add_reporter(stats)
-            # Save checkpoint every 5 generations, but keep only the last 5 checkpoint files
-            p.add_reporter(neat.Checkpointer(5, filename_prefix='neat-checkpoint-', max_generations_back=5))
+            # Save checkpoint every 5 generations
+            p.add_reporter(neat.Checkpointer(5, filename_prefix='neat-checkpoint-'))
 
             winner = p.run(self.eval_genomes, self.generations)
 
